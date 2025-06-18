@@ -1,3 +1,10 @@
+// import { useAuth } from '@/context/AuthContext';
+
+// const { user, loading } = useAuth();
+
+// if (loading) return <p>Loading...</p>;
+// if (!user) return <p>Please log in</p>;
+
 import Image from "next/image";
 
 export default function Home() {
