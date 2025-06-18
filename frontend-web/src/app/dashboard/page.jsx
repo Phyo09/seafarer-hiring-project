@@ -12,29 +12,36 @@ export default function DashboardPage() {
   // State to track if we are on the client side and if we have redirected
   // This prevents flicker by ensuring we only redirect once the client is ready
   // and avoids unnecessary redirects if the user is already logged in.
-  const [isClient, setIsClient] = useState(false);
-  const [hasRedirected, setHasRedirected] = useState(false);
-  
+  const [isClient, setIsClient] = useState(false); // Prevents error from SSR or hydration mismatch
+  const [hasRedirected, setHasRedirected] = useState(false); // Uses hasRedirected to prevent infinite or premature redirects
+
   useEffect(() => {
     setIsClient(true); // Wait until client loads
   }, []);
 
+  // Block render until auth is ready
+  if ( loading || !isClient || (!user && !hasRedirected) || (!user && typeof window !== 'undefined')) {
+    return <p className="text-center mt-10">Checking authentication...</p>;
+  }
+
+  // If user is not authenticated, redirect to login
+  // Prevents page from rendering anything while auth is still loading or redirecting
+  if (!user) {
+    router.replace('/login');
+    setHasRedirected(true); // Set to true to prevent flicker
+    return null; // ⛔️ prevent flicker or error
+  }
+
   useEffect(() => {
-    if (isClient && !loading && !user) {
+    if (isClient && !loading && !user && !hasRedirected) {
       router.replace('/login'); // safer than push to prevent flicker
       setHasRedirected(true);
     }
-  }, [isClient, user, loading, router]);
+  }, [isClient, user, loading, router, hasRedirected]);
 
-  if (!user) {
-    // router.replace('/login');
-    // setHasRedirected(true); // Set to true to prevent flicker
-    return null; // ⛔️ prevent flicker or error
-  }
   
-  if (!isClient || loading || (!user && !hasRedirected) || (!user && typeof window !== 'undefined')) {
-    return <p className="text-center mt-10">Checking authentication...</p>;
-  }
+  
+  
   
   // const handleLogout = async () => {
   //   await signOut(auth);
