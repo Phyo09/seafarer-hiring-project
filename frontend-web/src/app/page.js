@@ -4,12 +4,41 @@
 
 // if (loading) return <p>Loading...</p>;
 // if (!user) return <p>Please log in</p>;
+'use client'; //
+import { useEffect, useState } from 'react'; //
 
 import Image from "next/image";
 
 export default function Home() {
+  const [message, setMessage] = useState("Loading...");
+  const [people, setPeople] = useState([]);
+
+  useEffect(() => {
+    fetch("http://localhost:5000/api/home").then(
+      response => response.json()
+    ).then(
+      data => {
+        console.log(data)
+        setMessage(data.welcome_message);
+        setPeople(data.people || []);
+      }
+    )
+  }, []);
+
   return (
     <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
+      <div>
+        <div>{message}</div>
+        {
+          people.map((person, index) => (
+            <div key={index}> 
+              <h3>{person.name}</h3>
+              <p>{person.email}</p>
+            </div>
+          ))
+        }
+      </div>
+
       <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
         <Image
           className="dark:invert"

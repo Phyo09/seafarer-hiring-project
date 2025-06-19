@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const pool = require('../db'); // Make sure your db is set up correctly
+const pool = require('../config/db'); // Make sure your db is set up correctly
 
 router.post('/submit', async (req, res) => {
   try {

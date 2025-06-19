@@ -9,6 +9,14 @@ app.use(cors());
 app.use(express.json());
 app.use('/uploads', express.static('uploads'));
 
+app.get('/api/home', (req, res) => {
+  res.json({ welcome_message: 'Hi Frontend, Welcome to the backend!',
+    people: [
+      { name: 'John Doe', email: 'john@example.com' },
+      { name: 'Jane Doe', email: 'jane@example.com' }
+    ]
+  });
+});
 app.use('/api/profile', profileRoutes);
 app.use('/api/upload', uploadRoutes);
 app.use('/api/application', applicationRoutes);
