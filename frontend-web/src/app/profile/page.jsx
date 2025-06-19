@@ -10,6 +10,7 @@ export default function ProfilePage() {
   const router = useRouter();
   
   const [isClient, setIsClient] = useState(false);
+  const [hasRedirected, setHasRedirected] = useState(false); // Prevents infinite or premature redirects
 
   const [name, setName] = useState('');
   const [nationality, setNationality] = useState('');
@@ -20,14 +21,85 @@ export default function ProfilePage() {
   const [documents, setDocuments] = useState([]);
   const [previewUrl, setPreviewUrl] = useState(null);
   
+  
+  const handleDelete = async (type) => {
+    if (!confirm(`Are you sure you want to delete your ${type}?`)) return;
+
+    await fetch(`http://localhost:5000/api/upload/document/${user.uid}/${type}`, {
+      method: 'DELETE',
+    });
+
+    // Refresh document list
+    const res = await fetch(`http://localhost:5000/api/upload/${user.uid}`);
+    const docs = await res.json();
+    setDocuments(docs);
+  };
+    
+    
+  const shouldReplace = async (type, file) => {
+    const existing = documents.find(doc => doc.type === type);
+    if (!existing) return true;
+    return confirm(`You already uploaded a ${type}. Replace?\nOld: ${existing.file_path.split('/').pop()}\nNew: ${file.name}`);
+  };
+
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+
+    const profileData = {
+      firebase_uid: user.uid,
+      email: user.email,
+      full_name: name,
+      nationality,
+      experience
+    };
+    
+    // Save profile
+    await fetch('http://localhost:5000/api/profile/save', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(profileData),
+    });
+
+    // Upload passport
+    if (passportFile && await shouldReplace('passport')) {
+      const formData = new FormData();
+      formData.append('file', passportFile);
+      formData.append('type', 'passport');
+      formData.append('firebase_uid', user.uid);
+      await fetch('http://localhost:5000/api/upload/document', {
+        method: 'POST',
+        body: formData,
+      });
+    }
+
+    // Upload certificate
+    if (certFile && await shouldReplace('certificate')) {
+      const formData = new FormData();
+      formData.append('file', certFile);
+      formData.append('type', 'certificate');
+      formData.append('firebase_uid', user.uid);
+      await fetch('http://localhost:5000/api/upload/document', {
+        method: 'POST',
+        body: formData,
+      });
+    }
+
+    alert('Profile & documents saved!');
+    
+    const res = await fetch(`http://localhost:5000/api/upload/${user.uid}`);
+    const docs = await res.json();
+    setDocuments(docs);
+  };
 
   useEffect(() => setIsClient(true), []);
   
   useEffect(() => {
-    if (isClient && !loading && !user) {
+    if (isClient && !loading && !user && !hasRedirected) {
       router.replace('/login');
+      setHasRedirected(true);
     }
-  }, [isClient, loading, user, router]);
+  }, [isClient, loading, user, router, hasRedirected]);
   
   
   useEffect(() => {
@@ -47,77 +119,6 @@ export default function ProfilePage() {
             .then(docs => setDocuments(docs));
         }
       }, [user]);
-    
-    
-    const handleDelete = async (type) => {
-      if (!confirm(`Are you sure you want to delete your ${type}?`)) return;
-
-      await fetch(`http://localhost:5000/api/upload/document/${user.uid}/${type}`, {
-        method: 'DELETE',
-      });
-
-      // Refresh document list
-      const res = await fetch(`http://localhost:5000/api/upload/${user.uid}`);
-      const docs = await res.json();
-      setDocuments(docs);
-    };
-    
-    
-    const shouldReplace = async (type, file) => {
-        const existing = documents.find(doc => doc.type === type);
-        if (!existing) return true;
-        return confirm(`You already uploaded a ${type}. Replace?\nOld: ${existing.file_path.split('/').pop()}\nNew: ${file.name}`);
-      };
-
-
-    const handleSubmit = async (e) => {
-      e.preventDefault();
-
-      const profileData = {
-        firebase_uid: user.uid,
-        email: user.email,
-        full_name: name,
-        nationality,
-        experience
-      };
-      
-      // Save profile
-      await fetch('http://localhost:5000/api/profile/save', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(profileData),
-      });
-
-      // Upload passport
-      if (passportFile && await shouldReplace('passport')) {
-        const formData = new FormData();
-        formData.append('file', passportFile);
-        formData.append('type', 'passport');
-        formData.append('firebase_uid', user.uid);
-        await fetch('http://localhost:5000/api/upload/document', {
-          method: 'POST',
-          body: formData,
-        });
-      }
-
-      // Upload certificate
-      if (certFile && await shouldReplace('certificate')) {
-        const formData = new FormData();
-        formData.append('file', certFile);
-        formData.append('type', 'certificate');
-        formData.append('firebase_uid', user.uid);
-        await fetch('http://localhost:5000/api/upload/document', {
-          method: 'POST',
-          body: formData,
-        });
-      }
-
-      alert('Profile & documents saved!');
-      
-      const res = await fetch(`http://localhost:5000/api/upload/${user.uid}`);
-      const docs = await res.json();
-      setDocuments(docs);
-    };
 
     // Block render until auth is ready
     // Prevents error from SSR or hydration mismatch

@@ -19,8 +19,16 @@ export default function DashboardPage() {
     setIsClient(true); // Wait until client loads
   }, []);
 
+  useEffect(() => {
+    if (isClient && !loading && !user && !hasRedirected) {
+      router.replace('/login'); // safer than push to prevent flicker
+      setHasRedirected(true);
+    }
+  }, [isClient, user, loading, router, hasRedirected]);
+
   // Block render until auth is ready
   if ( loading || !isClient || (!user && !hasRedirected) || (!user && typeof window !== 'undefined')) {
+    console.log(loading, isClient, user, hasRedirected);
     return <p className="text-center mt-10">Checking authentication...</p>;
   }
 
@@ -31,15 +39,6 @@ export default function DashboardPage() {
     setHasRedirected(true); // Set to true to prevent flicker
     return null; // ⛔️ prevent flicker or error
   }
-
-  useEffect(() => {
-    if (isClient && !loading && !user && !hasRedirected) {
-      router.replace('/login'); // safer than push to prevent flicker
-      setHasRedirected(true);
-    }
-  }, [isClient, user, loading, router, hasRedirected]);
-
-  
   
   
   

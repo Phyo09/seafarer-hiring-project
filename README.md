@@ -76,10 +76,16 @@ Dashboard analytics (optional)
 # Folder Structure (SaaS-Ready + Expandable)
 your-hiring-app/
 ├── backend/
+│   ├── controllers/
 │   ├── models/         # User, Company, JobPost, Application
 │   ├── routes/         # auth, jobs, profiles
 │   ├── middleware/     # auth, tenant-check
-│   └── app.js
+│   ├── uploads/               ← for temporary file storage (if needed)
+│   ├── config/
+│   │   └── db.js              ← PostgreSQL connection
+│   │── app.js
+│   ├── server.js
+│   └── .env
 ├── frontend-web/       # React App
 │   └── pages/          # login, dashboard, profile, jobs
 ├── mobile-app/         # Flutter
