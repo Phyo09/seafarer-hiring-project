@@ -41,3 +41,8 @@ npm install tailwindcss postcss autoprefixer
 npx tailwindcss init -p
 npm install -g npm
 npm install firebase
+npm install -D tailwindcss postcss autoprefixer
+npm install -D @tailwindcss/postcss
+npx tailwindcss init -p
+npx shadcn@latest init
+npx shadcn@latest add input textarea select label button
